@@ -10,8 +10,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/sandeepshekhar26/recap/internal/mcp"
 )
 
 // version is overridden at build time via -ldflags "-X main.version=...".
@@ -47,9 +52,11 @@ func run(args []string) error {
 	}
 }
 
-// cmdServe will start the MCP stdio server. See ROADMAP Phase v0 §1.
+// cmdServe starts the MCP stdio server, shutting down cleanly on SIGINT/SIGTERM.
 func cmdServe(_ []string) error {
-	return fmt.Errorf("serve: not implemented yet (ROADMAP Phase v0 §1)")
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return mcp.Serve(ctx, version)
 }
 
 // cmdHook handles a Claude Code lifecycle hook event. See ROADMAP Phase v0 §6.

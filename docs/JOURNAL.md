@@ -5,6 +5,32 @@ A fresh session should read the top entry first to orient. Keep entries short an
 
 ---
 
+## 2026-06-23 (cont.) — Phase v0 §1: MCP server skeleton
+
+**Done**
+- Added the official Go MCP SDK **v1.6.1** (`github.com/modelcontextprotocol/go-sdk/mcp`).
+  Confirmed the real API by `go doc` before coding: `NewServer`, generic
+  `AddTool[In,Out]` with `ToolHandlerFor`, `StdioTransport`, `Server.Run`,
+  `NewInMemoryTransports`.
+- `internal/mcp`: `Serve()` runs the stdio server; `newServer()` registers the five
+  `memory_*` tools as typed no-op stubs (each carries its input JSON schema via a Go
+  struct + `jsonschema` tags, and returns a "not implemented (Phase §x)" message).
+- `recap serve` now starts the server with SIGINT/SIGTERM graceful shutdown; client
+  disconnect (stdin EOF) and ctx-cancel are treated as **clean** exits (exit 0).
+- Tests: in-memory `ListTools` test asserts exactly the five tools with descriptions
+  (first real test → CI now has something to run). Also did a manual stdio JSON-RPC smoke
+  test (initialize → tools/list → tools/call) — all green, exit 0.
+
+**Why**
+- A discoverable tool surface is the contract every client (Claude Code/Cursor/Codex)
+  binds to; locking the names + schemas now lets storage/retrieval land behind a stable API.
+
+**Next**
+- **Phase v0 §2 (Storage):** decide SQLite driver (CGo `mattn` vs pure-Go `modernc`) —
+  this is the gating open decision — then schema + migrations + per-client DB resolution.
+
+---
+
 ## 2026-06-23 (cont.) — Phase 0 complete: CI
 
 **Done**

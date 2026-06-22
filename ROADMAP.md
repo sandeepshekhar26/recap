@@ -11,8 +11,9 @@ for the working loop.
 
 ## ▶ Current focus
 
-**Phase 0 complete.** Now starting **Phase v0 §1 — MCP server skeleton**:
-**"Wire the official Go MCP SDK and serve an empty stdio server"** (first unchecked box below).
+**Phase v0 §1 done** (MCP server skeleton + 5 no-op tools, tested). Next:
+**Phase v0 §2 — Storage layer.** First sub-task / open decision: **choose the SQLite driver**
+(CGo `mattn/go-sqlite3` vs pure-Go `modernc.org/sqlite`) and record it in `docs/TECH.md`.
 
 ---
 
@@ -35,11 +36,12 @@ for the working loop.
 Goal: a working, installable-by-hand Claude Code plugin that auto-captures and injects
 memory locally. Ship to the Claude Code marketplace + official MCP Registry at the end.
 
-### 1. MCP server skeleton
-- [ ] Add `github.com/modelcontextprotocol/go-sdk/mcp`; serve an empty stdio server
-- [ ] `recap serve` subcommand wires the server to stdio transport
-- [ ] Register no-op versions of the five tools (`memory_recall`, `memory_search`,
+### 1. MCP server skeleton ✅
+- [x] Add `github.com/modelcontextprotocol/go-sdk/mcp` (v1.6.1); serve an empty stdio server
+- [x] `recap serve` subcommand wires the server to stdio transport (clean EOF/ctx shutdown)
+- [x] Register no-op versions of the five tools (`memory_recall`, `memory_search`,
       `memory_save`, `memory_save_rejection`, `memory_list_rejections`) so a client can list them
+      — verified by an in-memory `ListTools` test and a real stdio JSON-RPC smoke test
 
 ### 2. Storage layer (SQLite)
 - [ ] Choose SQLite driver (CGo `mattn/go-sqlite3` vs pure-Go `modernc.org/sqlite`) — record in TECH.md
