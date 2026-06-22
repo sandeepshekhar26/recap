@@ -11,10 +11,10 @@ for the working loop.
 
 ## ▶ Current focus
 
-**Phase v0 §1–§6 done** — server + hooks functional (verified live: session-start injects
-project memory as additionalContext). Next: **Phase v0 §7 — local web viewer**
-(HTTP API + embedded SPA to browse/delete), then §8 packaging (plugin manifest, MCP
-registry, GoReleaser).
+**Phase v0 §1–§7 done** — server + hooks + web viewer all functional and verified live.
+Last step: **Phase v0 §8 — package & publish artifacts** (Claude Code plugin manifest,
+marketplace.json, `server.json` for the MCP registry, GoReleaser config). Actual submission
+to registries is a manual release step (needs accounts/tags); this creates the artifacts.
 
 ---
 
@@ -77,9 +77,11 @@ memory locally. Ship to the Claude Code marketplace + official MCP Registry at t
       model, which conflicts with zero-config-local; lands with the Ollama/sidecar embedder.
       Hooks are best-effort (errors → stderr, exit 0) so a misconfig never breaks a session.
 
-### 7. Local web viewer
-- [ ] HTTP server + JSON API (list/edit/delete) embedded via `embed.FS`
-- [ ] Minimal SPA for browse/edit/delete
+### 7. Local web viewer ✅
+- [x] HTTP server + JSON API (list/delete) for memories & rejections; `recap viewer --addr`
+- [x] Minimal SPA (single embedded `index.html` via `embed.FS`) for browse/delete
+      — in-place *edit* deferred (delete + re-save via tools covers it; satisfies the §10
+      "easy edit/delete" mitigation)
 
 ### 8. Package & publish
 - [ ] Claude Code plugin manifest (`.claude-plugin/plugin.json`, `.mcp.json`, `hooks/`)

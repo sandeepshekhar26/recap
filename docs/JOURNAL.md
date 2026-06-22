@@ -5,6 +5,32 @@ A fresh session should read the top entry first to orient. Keep entries short an
 
 ---
 
+## 2026-06-23 (cont.) — Phase v0 §7: local web viewer
+
+**Done**
+- `internal/viewer`: HTTP `Handler` with JSON API — `GET /api/info`, `GET /api/memories`,
+  `GET /api/rejections`, `DELETE /api/memories/{id}`, `DELETE /api/rejections/{id}` (Go 1.22
+  method+wildcard routes) — plus a single embedded `index.html` (`embed.FS`) SPA that lists
+  rejections + memories with delete buttons (light/dark, zero external deps).
+- Store: `AllMemories`, `AllRejections`, `DeleteMemory`, `DeleteRejection` (FTS stays in sync
+  via the delete trigger).
+- `recap viewer [--addr]` (default `127.0.0.1:37788`) opens the per-client DB and serves with
+  graceful shutdown.
+- Tests: httptest list/delete round-trip + index content-type; **live** smoke (`/api/info`
+  JSON + `/` 200, 3654 bytes).
+
+**Why**
+- claude-mem proved users want a local browse/edit surface; delete also implements the §10
+  "easy edit/delete" mitigation against context poisoning. In-place edit deferred (delete +
+  re-save via tools covers it).
+
+**Next**
+- **Phase v0 §8 — packaging artifacts:** Claude Code plugin manifest + `.mcp.json` + hooks
+  config, `marketplace.json`, `server.json` (MCP registry), GoReleaser. Actual publishing is
+  a manual release step.
+
+---
+
 ## 2026-06-23 (cont.) — Phase v0 §6: lifecycle hooks
 
 **Done**

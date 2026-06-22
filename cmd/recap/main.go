@@ -11,7 +11,9 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
@@ -24,6 +26,7 @@ import (
 	"github.com/sandeepshekhar26/recap/internal/mcp"
 	"github.com/sandeepshekhar26/recap/internal/retrieval"
 	"github.com/sandeepshekhar26/recap/internal/store"
+	"github.com/sandeepshekhar26/recap/internal/viewer"
 )
 
 // promptInjectBudget caps the tokens injected per prompt by the
@@ -51,6 +54,8 @@ func run(args []string) error {
 		return cmdServe(args[1:])
 	case "hook":
 		return cmdHook(args[1:])
+	case "viewer":
+		return cmdViewer(args[1:])
 	case "version", "--version", "-v":
 		fmt.Println("recap", version)
 		return nil
@@ -84,6 +89,44 @@ func cmdServe(_ []string) error {
 		ClientID:  sc.clientID,
 		ProjectID: sc.projectID,
 	})
+}
+
+// cmdViewer serves the local web UI for browsing/deleting the current client's
+// memories, shutting down cleanly on SIGINT/SIGTERM.
+func cmdViewer(args []string) error {
+	fs := flag.NewFlagSet("viewer", flag.ContinueOnError)
+	addr := fs.String("addr", "127.0.0.1:37788", "address to listen on")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	sc, err := openScope(ctx, cwd)
+	if err != nil {
+		return err
+	}
+	defer sc.store.Close()
+
+	srv := &http.Server{
+		Addr:    *addr,
+		Handler: viewer.New(sc.store, sc.clientID, sc.projectID).Handler(),
+	}
+	go func() {
+		<-ctx.Done()
+		srv.Close()
+	}()
+
+	fmt.Fprintf(os.Stderr, "recap viewer: http://%s  (client=%s, project=%s)\n", *addr, sc.clientID, sc.projectID)
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return err
+	}
+	return nil
 }
 
 // scope is a resolved client/project plus its open per-client database.
@@ -230,6 +273,7 @@ func usage() {
 usage:
   recap serve            start the MCP stdio server
   recap hook <event>     handle a lifecycle hook (session-start|session-end|stop|user-prompt-submit)
+  recap viewer [--addr]  serve the local web viewer (default 127.0.0.1:37788)
   recap version          print version
   recap help             show this help
 `)

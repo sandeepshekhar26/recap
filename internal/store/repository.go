@@ -98,6 +98,74 @@ func (db *DB) ListRejections(ctx context.Context, clientID, projectID string) ([
 	return out, rows.Err()
 }
 
+// AllMemories returns every memory in this (per-client) database, newest first.
+// Used by the local web viewer.
+func (db *DB) AllMemories(ctx context.Context) ([]Memory, error) {
+	rows, err := db.sql.QueryContext(ctx,
+		`SELECT id, client_id, project_id, type, content, rationale, created_at, embedding
+		 FROM memories ORDER BY created_at DESC, id DESC`)
+	if err != nil {
+		return nil, fmt.Errorf("all memories: %w", err)
+	}
+	defer rows.Close()
+
+	var out []Memory
+	for rows.Next() {
+		var (
+			m   Memory
+			emb []byte
+		)
+		if err := rows.Scan(&m.ID, &m.ClientID, &m.ProjectID, &m.Type, &m.Content, &m.Rationale, &m.CreatedAt, &emb); err != nil {
+			return nil, fmt.Errorf("all memories: scan: %w", err)
+		}
+		m.Embedding = decodeEmbedding(emb)
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
+// AllRejections returns every rejected approach in this database, newest first.
+func (db *DB) AllRejections(ctx context.Context) ([]Rejection, error) {
+	rows, err := db.sql.QueryContext(ctx,
+		`SELECT id, client_id, project_id, approach, reason_rejected, created_at, embedding
+		 FROM rejected_approaches ORDER BY created_at DESC, id DESC`)
+	if err != nil {
+		return nil, fmt.Errorf("all rejections: %w", err)
+	}
+	defer rows.Close()
+
+	var out []Rejection
+	for rows.Next() {
+		var (
+			r   Rejection
+			emb []byte
+		)
+		if err := rows.Scan(&r.ID, &r.ClientID, &r.ProjectID, &r.Approach, &r.ReasonRejected, &r.CreatedAt, &emb); err != nil {
+			return nil, fmt.Errorf("all rejections: scan: %w", err)
+		}
+		r.Embedding = decodeEmbedding(emb)
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
+// DeleteMemory removes a memory by id (FTS index is kept in sync by triggers).
+// Deleting a missing id is not an error.
+func (db *DB) DeleteMemory(ctx context.Context, id int64) error {
+	if _, err := db.sql.ExecContext(ctx, `DELETE FROM memories WHERE id = ?`, id); err != nil {
+		return fmt.Errorf("delete memory: %w", err)
+	}
+	return nil
+}
+
+// DeleteRejection removes a rejected approach by id.
+func (db *DB) DeleteRejection(ctx context.Context, id int64) error {
+	if _, err := db.sql.ExecContext(ctx, `DELETE FROM rejected_approaches WHERE id = ?`, id); err != nil {
+		return fmt.Errorf("delete rejection: %w", err)
+	}
+	return nil
+}
+
 // UpsertSession inserts a session row or updates its summary/ended_at if the id
 // already exists. Used by the session-end hook for lightweight bookkeeping.
 func (db *DB) UpsertSession(ctx context.Context, s Session) error {

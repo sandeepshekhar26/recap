@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>recap — memory viewer</title>
+<style>
+  :root { color-scheme: light dark; --fg:#1a1a1a; --muted:#6b7280; --line:#e5e7eb;
+          --bg:#ffffff; --card:#f9fafb; --warn:#b45309; --warnbg:#fffbeb; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e5e7eb; --muted:#9ca3af; --line:#374151; --bg:#0b0e14;
+            --card:#111827; --warn:#fbbf24; --warnbg:#1f1a0a; }
+  }
+  * { box-sizing: border-box; }
+  body { font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+         color:var(--fg); background:var(--bg); margin:0; padding:24px; max-width:880px; }
+  header { display:flex; align-items:baseline; gap:12px; margin-bottom:20px; }
+  h1 { font-size:20px; margin:0; }
+  .scope { color:var(--muted); font-size:13px; }
+  h2 { font-size:15px; margin:24px 0 8px; }
+  .empty { color:var(--muted); font-style:italic; }
+  .item { background:var(--card); border:1px solid var(--line); border-radius:8px;
+          padding:10px 12px; margin:8px 0; display:flex; gap:10px; align-items:flex-start; }
+  .item.rej { background:var(--warnbg); border-color:var(--warn); }
+  .item .body { flex:1; min-width:0; }
+  .tag { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  .rej .tag { color:var(--warn); }
+  .why, .meta { color:var(--muted); font-size:12px; margin-top:2px; }
+  .content { word-wrap:break-word; }
+  button.del { border:1px solid var(--line); background:transparent; color:var(--muted);
+               border-radius:6px; cursor:pointer; padding:2px 8px; font-size:12px; }
+  button.del:hover { color:#dc2626; border-color:#dc2626; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>recap</h1>
+    <span class="scope" id="scope">loading…</span>
+  </header>
+
+  <h2>Rejected approaches</h2>
+  <div id="rejections"></div>
+
+  <h2>Memories</h2>
+  <div id="memories"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => (s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const when = (sec) => sec ? new Date(sec * 1000).toLocaleString() : "";
+
+async function del(kind, id) {
+  if (!confirm("Delete this " + kind + "?")) return;
+  await fetch(`/api/${kind}/${id}`, { method: "DELETE" });
+  load();
+}
+
+function row(kind, id, tag, content, sub, meta) {
+  const cls = kind === "rejections" ? "item rej" : "item";
+  return `<div class="${cls}">
+    <div class="body">
+      <div class="tag">${esc(tag)}</div>
+      <div class="content">${esc(content)}</div>
+      ${sub ? `<div class="why">${esc(sub)}</div>` : ""}
+      <div class="meta">${esc(meta)}</div>
+    </div>
+    <button class="del" onclick="del('${kind}', ${id})">delete</button>
+  </div>`;
+}
+
+async function load() {
+  const info = await (await fetch("/api/info")).json();
+  $("scope").textContent = `client: ${info.client_id} · project: ${info.project_id}`;
+
+  const rej = await (await fetch("/api/rejections")).json();
+  $("rejections").innerHTML = rej.length
+    ? rej.map(r => row("rejections", r.id, "ruled out", r.approach, "because " + r.reason_rejected,
+        `${r.project_id} · ${when(r.created_at)}`)).join("")
+    : `<div class="empty">No rejected approaches yet.</div>`;
+
+  const mem = await (await fetch("/api/memories")).json();
+  $("memories").innerHTML = mem.length
+    ? mem.map(m => row("memories", m.id, m.type, m.content, m.rationale ? "why: " + m.rationale : "",
+        `${m.project_id} · ${when(m.created_at)}`)).join("")
+    : `<div class="empty">No memories yet.</div>`;
+}
+
+load();
+</script>
+</body>
+</html>
