@@ -11,8 +11,8 @@ for the working loop.
 
 ## ▶ Current focus
 
-**Phase 0 → Phase v0.** Foundation is mostly done; next concrete code task:
-**"Wire the official Go MCP SDK and serve an empty stdio server"** (Phase v0 §1, first unchecked box).
+**Phase 0 complete.** Now starting **Phase v0 §1 — MCP server skeleton**:
+**"Wire the official Go MCP SDK and serve an empty stdio server"** (first unchecked box below).
 
 ---
 
@@ -28,7 +28,7 @@ for the working loop.
 - [x] `docs/STUDY.md` (reference notes)
 - [x] `docs/JOURNAL.md` (session log, first entry)
 - [x] Go module scaffold (`go.mod`, `cmd/recap`, `.gitignore`) that builds
-- [ ] CI: GitHub Actions running `go build` + `go test` on push
+- [x] CI: GitHub Actions running `gofmt` + `go build` + `go vet` + `go test` on push/PR
 
 ## Phase v0 — Claude Code plugin core (decision.md §7)
 

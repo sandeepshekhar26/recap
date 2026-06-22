@@ -5,6 +5,27 @@ A fresh session should read the top entry first to orient. Keep entries short an
 
 ---
 
+## 2026-06-23 (cont.) — Phase 0 complete: CI
+
+**Done**
+- Added `.github/workflows/ci.yml`: on push to `main` and on PRs, runs gofmt check →
+  `go build ./...` → `go vet ./...` → `go test ./...` on `ubuntu-latest`, Go version read
+  from `go.mod`. This closes the last Phase 0 box; **Phase 0 is complete.**
+- Verified the same suite locally — all green (no test files yet, which is expected).
+
+**Why**
+- A build/test gate from day one keeps the commit-by-commit cadence honest before real code lands.
+
+**Next**
+- **Phase v0 §1:** add `github.com/modelcontextprotocol/go-sdk/mcp`, make `recap serve` run
+  an empty stdio MCP server, then register the five `memory_*` tools as no-ops.
+
+**Note:** CI only *executes* after a `git push` (it triggers on the `push`/`pull_request`
+events). No marketplace/registry "publish" is involved — Actions runs automatically once
+the workflow file is on GitHub.
+
+---
+
 ## 2026-06-23 — Foundation: repo made self-sustaining + Go scaffold
 
 **Done**
