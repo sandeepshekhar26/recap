@@ -1,0 +1,106 @@
+# ROADMAP — recap
+
+Live status tracker. **Checkboxes are the source of truth for progress.** Work top-down
+within the current phase. When you finish a task, tick it, move "Current focus", and log
+it in [`docs/JOURNAL.md`](docs/JOURNAL.md) — in the same commit. See [`CLAUDE.md`](CLAUDE.md)
+for the working loop.
+
+**Legend:** `[ ]` todo · `[x]` done · `[~]` in progress · `[!]` blocked / needs decision
+
+---
+
+## ▶ Current focus
+
+**Phase 0 → Phase v0.** Foundation is mostly done; next concrete code task:
+**"Wire the official Go MCP SDK and serve an empty stdio server"** (Phase v0 §1, first unchecked box).
+
+---
+
+## Phase 0 — Foundation (repo is self-sustaining)
+
+- [x] Write `decision.md` (spec + competitive analysis)
+- [x] Tech stack decision (`decision.md` §11)
+- [x] `git init`, remote, first push
+- [x] `CLAUDE.md` entry point + working loop
+- [x] `README.md`
+- [x] `ROADMAP.md` (this file)
+- [x] `docs/TECH.md` (architecture & conventions)
+- [x] `docs/STUDY.md` (reference notes)
+- [x] `docs/JOURNAL.md` (session log, first entry)
+- [x] Go module scaffold (`go.mod`, `cmd/recap`, `.gitignore`) that builds
+- [ ] CI: GitHub Actions running `go build` + `go test` on push
+
+## Phase v0 — Claude Code plugin core (decision.md §7)
+
+Goal: a working, installable-by-hand Claude Code plugin that auto-captures and injects
+memory locally. Ship to the Claude Code marketplace + official MCP Registry at the end.
+
+### 1. MCP server skeleton
+- [ ] Add `github.com/modelcontextprotocol/go-sdk/mcp`; serve an empty stdio server
+- [ ] `recap serve` subcommand wires the server to stdio transport
+- [ ] Register no-op versions of the five tools (`memory_recall`, `memory_search`,
+      `memory_save`, `memory_save_rejection`, `memory_list_rejections`) so a client can list them
+
+### 2. Storage layer (SQLite)
+- [ ] Choose SQLite driver (CGo `mattn/go-sqlite3` vs pure-Go `modernc.org/sqlite`) — record in TECH.md
+- [ ] Schema + migrations: `memories`, `rejected_approaches`, `sessions`, FTS5 virtual table
+- [ ] Per-client DB resolution: directory → `client_id` → DB file path
+- [ ] CRUD repository functions with tests
+
+### 3. Retrieval
+- [ ] FTS5 keyword query
+- [ ] `Embedder` interface + FTS5-only no-op embedder (vectors stubbed)
+- [ ] Vector cosine over stored embeddings
+- [ ] Reciprocal-rank fusion of keyword + vector results
+- [ ] Token-budget-aware selection (index + small-files pattern, hard cap)
+
+### 4. The differentiator: rejected-approach capture
+- [ ] `memory_save_rejection` writes `{approach, reason_rejected, scope, date}`
+- [ ] `memory_list_rejections` for the active project
+- [ ] SessionStart injection always prepends active rejections ("Already ruled out: X because Y")
+
+### 5. Tools wired to storage
+- [ ] Implement `memory_save` / `memory_recall` / `memory_search` against the repository
+
+### 6. Hooks (auto-capture & inject)
+- [ ] `recap hook session-start` → emits `hookSpecificOutput.additionalContext` under token budget
+- [ ] `recap hook session-end` / `stop` → enqueue observation fast (<10ms), compress async
+- [ ] Background worker: compress queued observations → store (the claude-mem pattern)
+- [ ] `recap hook user-prompt-submit` → lightweight relevance injection
+
+### 7. Local web viewer
+- [ ] HTTP server + JSON API (list/edit/delete) embedded via `embed.FS`
+- [ ] Minimal SPA for browse/edit/delete
+
+### 8. Package & publish
+- [ ] Claude Code plugin manifest (`.claude-plugin/plugin.json`, `.mcp.json`, `hooks/`)
+- [ ] Marketplace repo (`.claude-plugin/marketplace.json`)
+- [ ] `server.json` → official MCP Registry (GitHub OIDC, CI-automated)
+- [ ] GoReleaser cross-platform build matrix
+
+## Phase v1 — Cross-tool & packaging (weeks 5–8)
+
+- [ ] Rust `fastembed-rs` embedding sidecar (the zero-config default embedder)
+- [ ] Ollama HTTP embedder backend
+- [ ] Cursor adapter (MCP + optional `.cursor/rules` injection block, marker-bounded)
+- [ ] Codex adapter (MCP)
+- [ ] `.mcpb` bundle for Claude Desktop
+- [ ] Import/mirror from native Claude Code Auto Memory
+- [ ] Token-budget tuner
+
+## Phase v2 — Paid / team (months 3+)
+
+- [ ] Cloud-sync tier (cross-machine)
+- [ ] Team sharing (shared client/project memory, RBAC, audit)
+- [ ] Hosted embeddings
+
+---
+
+## Decisions still open (resolve before the dependent task)
+
+- [!] **SQLite driver:** CGo (full FTS5 + `sqlite-vec` extension) vs pure-Go (CGo-free,
+      manual cosine). Blocks Phase v0 §2. See `decision.md` §11 + `docs/TECH.md`.
+- [!] **Embedding default for v0:** ship Ollama-or-FTS5-fallback now, Rust sidecar in v1
+      (current plan) — confirm before §6 injection work.
+- [!] **Cursor Memories status** (may have moved to Rules in v2.1.x) — verify before the
+      Cursor adapter (`decision.md` §10).
