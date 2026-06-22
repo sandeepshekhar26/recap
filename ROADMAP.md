@@ -11,10 +11,12 @@ for the working loop.
 
 ## ▶ Current focus
 
-**Phase v0 §1–§7 done** — server + hooks + web viewer all functional and verified live.
-Last step: **Phase v0 §8 — package & publish artifacts** (Claude Code plugin manifest,
-marketplace.json, `server.json` for the MCP registry, GoReleaser config). Actual submission
-to registries is a manual release step (needs accounts/tags); this creates the artifacts.
+**🎉 Phase v0 COMPLETE** — recap is a functional local-first memory layer: MCP server with
+five working `memory_*` tools, lifecycle hooks (auto-recall at session start), hybrid
+retrieval, per-client isolation, a web viewer, and packaging artifacts (all CGo-free,
+cross-compiled). Next phase: **Phase v1** — real embeddings (Ollama / Rust `fastembed-rs`
+sidecar) for semantic recall, Cursor/Codex adapters, `.mcpb` bundle, and the release tasks
+under §8. Remaining v0 §6 async LLM-compression is folded into v1 (it needs a model).
 
 ---
 
@@ -83,11 +85,13 @@ memory locally. Ship to the Claude Code marketplace + official MCP Registry at t
       — in-place *edit* deferred (delete + re-save via tools covers it; satisfies the §10
       "easy edit/delete" mitigation)
 
-### 8. Package & publish
-- [ ] Claude Code plugin manifest (`.claude-plugin/plugin.json`, `.mcp.json`, `hooks/`)
-- [ ] Marketplace repo (`.claude-plugin/marketplace.json`)
-- [ ] `server.json` → official MCP Registry (GitHub OIDC, CI-automated)
-- [ ] GoReleaser cross-platform build matrix
+### 8. Package & publish ✅ (artifacts created; submission is a manual release step)
+- [x] Claude Code plugin manifest `.claude-plugin/plugin.json` (mcpServers + hooks inline)
+- [x] Marketplace `.claude-plugin/marketplace.json` (single-plugin, `source: "./"`)
+- [x] `server.json` for the official MCP Registry (`io.github.sandeepshekhar26/recap`)
+- [x] GoReleaser matrix — **CGO_ENABLED=0 cross-compile verified** for darwin/linux/windows × amd64/arm64
+- [ ] **release tasks (need a tag/accounts):** add `LICENSE`, build/attach `recap.mcpb`,
+      submit to MCP Registry (GitHub OIDC) + claude-plugins-community, fill server.json hash
 
 ## Phase v1 — Cross-tool & packaging (weeks 5–8)
 

@@ -1,0 +1,15 @@
+{
+  "name": "recap",
+  "owner": {
+    "name": "Sandeep Shekhar"
+  },
+  "plugins": [
+    {
+      "name": "recap",
+      "description": "Local-first memory for coding agents: per-client isolation + rejected-approach capture, recalled automatically at session start.",
+      "source": "./",
+      "category": "productivity",
+      "version": "0.0.0"
+    }
+  ]
+}

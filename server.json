@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.sandeepshekhar26/recap",
+  "description": "Local-first memory for coding agents: per-client isolation and rejected-approach capture, with hybrid FTS5 + vector recall.",
+  "version": "0.0.0",
+  "repository": {
+    "url": "https://github.com/sandeepshekhar26/recap",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/sandeepshekhar26/recap/releases/download/v0.0.0/recap.mcpb",
+      "version": "0.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

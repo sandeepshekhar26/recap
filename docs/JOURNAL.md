@@ -5,6 +5,34 @@ A fresh session should read the top entry first to orient. Keep entries short an
 
 ---
 
+## 2026-06-23 (cont.) — Phase v0 §8: packaging artifacts — PHASE v0 COMPLETE 🎉
+
+**Done**
+- `.claude-plugin/plugin.json` — Claude Code plugin with mcpServers (`recap serve`) and the
+  three hooks inline (authoritative, avoids strict-mode ambiguity).
+- `.claude-plugin/marketplace.json` — single-plugin marketplace (`source: "./"`), so
+  `/plugin marketplace add sandeepshekhar26/recap` works.
+- `server.json` — official MCP Registry manifest (schema 2025-12-11, name
+  `io.github.sandeepshekhar26/recap`, mcpb package).
+- `.goreleaser.yaml` — release matrix with **CGO_ENABLED=0**.
+- **Verified CGO-free cross-compile** for darwin/linux/windows × amd64/arm64 (5 targets) —
+  this is the payoff of the pure-Go SQLite decision. All three JSON manifests validated.
+- README updated: status → "v0 functional, pre-release", quickstart (Claude Code plugin,
+  Cursor/Codex `.mcp.json`, viewer, per-client `config.json`), license Apache-2.0.
+
+**Phase v0 status:** §1–§8 all done. recap is a working local-first memory layer end-to-end:
+MCP server (5 tools) + hooks (session-start injection) + hybrid retrieval + per-client
+isolation + web viewer + packaging. Test suite green across mcp/store/retrieval/hook/viewer.
+
+**Deferred to v1 (need a model or a release):** semantic recall (Ollama / `fastembed-rs`
+sidecar), async LLM observation compression, Cursor/Codex adapters, `.mcpb` bundle build,
+`LICENSE` file, and the actual registry/marketplace submission.
+
+**Next (Phase v1):** start with the Ollama embedder backend (`internal/embed`) so recall
+goes semantic with zero call-site changes, then the Rust sidecar and cross-tool adapters.
+
+---
+
 ## 2026-06-23 (cont.) — Phase v0 §7: local web viewer
 
 **Done**

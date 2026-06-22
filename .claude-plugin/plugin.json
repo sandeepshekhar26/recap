@@ -1,0 +1,41 @@
+{
+  "name": "recap",
+  "version": "0.0.0",
+  "description": "Local-first memory for coding agents: per-client isolation + rejected-approach capture, recalled automatically at session start. Private, no API key.",
+  "author": {
+    "name": "Sandeep Shekhar"
+  },
+  "homepage": "https://github.com/sandeepshekhar26/recap",
+  "repository": "https://github.com/sandeepshekhar26/recap",
+  "license": "Apache-2.0",
+  "keywords": ["memory", "mcp", "context", "local-first", "claude-code"],
+  "mcpServers": {
+    "recap": {
+      "command": "recap",
+      "args": ["serve"]
+    }
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "recap hook session-start", "timeout": 10 }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          { "type": "command", "command": "recap hook session-end", "timeout": 10 }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "recap hook user-prompt-submit", "timeout": 10 }
+        ]
+      }
+    ]
+  }
+}

@@ -6,7 +6,9 @@ recap gives AI coding agents a memory that survives the blank-context-window pro
 auto-captured, private, and portable across tools. It ships as a Claude Code plugin
 (MCP server + lifecycle hooks) and as a standalone local MCP server for Cursor and Codex.
 
-> Status: **early development (v0).** Not yet installable. See [`ROADMAP.md`](ROADMAP.md).
+> Status: **v0 functional, pre-release.** The core works locally — MCP server (`memory_*`
+> tools), lifecycle hooks (auto-recall at session start), and a web viewer. Cross-tool
+> adapters and packaged installers are next. See [`ROADMAP.md`](ROADMAP.md).
 
 ## Why recap is different
 
@@ -32,6 +34,42 @@ The "agent memory" space is crowded, so recap competes on a sharp wedge (full an
 
 See [`docs/TECH.md`](docs/TECH.md) for the full design.
 
+## Quickstart (local, from source)
+
+Requires Go 1.26+.
+
+```bash
+go install github.com/sandeepshekhar26/recap/cmd/recap@latest   # or: go build -o recap ./cmd/recap
+recap version
+```
+
+**Claude Code** — install as a plugin from this repo (registers the MCP tools + hooks; needs `recap` on `PATH`):
+
+```
+/plugin marketplace add sandeepshekhar26/recap
+/plugin install recap@recap
+```
+
+**Cursor / Codex** — register the MCP server manually (e.g. `~/.cursor/mcp.json`):
+
+```json
+{ "mcpServers": { "recap": { "command": "recap", "args": ["serve"] } } }
+```
+
+**Browse / prune your memory:**
+
+```bash
+recap viewer        # http://127.0.0.1:37788
+```
+
+**Per-client isolation** — map directories to clients in `~/.recap/config.json`:
+
+```json
+{ "clients": [ { "path_prefix": "/Users/you/work/acme", "client_id": "acme" } ] }
+```
+
+Each client gets its own SQLite file, so Client A's memory can never surface in Client B's sessions.
+
 ## Repo map
 
 | File | Purpose |
@@ -45,4 +83,4 @@ See [`docs/TECH.md`](docs/TECH.md) for the full design.
 
 ## License
 
-TBD (intended OSS — Apache-2.0 leaning, matching the category).
+Apache-2.0 (a `LICENSE` file is added at the first tagged release).
