@@ -5,6 +5,37 @@ A fresh session should read the top entry first to orient. Keep entries short an
 
 ---
 
+## 2026-06-23 (cont.) — Phase v0 §6: lifecycle hooks
+
+**Done**
+- `internal/hook`: `ParseInput` (stdin payload), `SessionStartContext` / `PromptContext`
+  builders that emit `{"hookSpecificOutput":{"hookEventName","additionalContext"}}` (silent
+  injection, CC 2.1+). Moved the recall formatters down into `internal/retrieval`
+  (`FormatRecall`/`FormatMemories`/`FormatRejections` + `Result.HasContent`) so both `mcp`
+  and `hook` share them without an import cycle.
+- `recap hook <event>` dispatch in cmd (best-effort: errors → stderr, **exit 0**, never
+  breaks the session):
+  - `session-start` → recall (rejections + relevant memories) → additionalContext; nothing
+    when empty.
+  - `user-prompt-submit` → small prompt-relevant injection (budget 500, memories only — no
+    repeated rejections, to avoid context poisoning per decision.md §10).
+  - `session-end` → `store.UpsertSession` bookkeeping. `stop` → no-op.
+- Added `store.UpsertSession`. Hook package unit tests (parse, JSON output shape, empty
+  cases) + **live smoke test**: seeded a rejection+memory via serve, then `hook session-start`
+  emitted the correct injection JSON; empty project emitted nothing; session-end exit 0.
+
+**Why / honest scope**
+- SessionStart injection is the highest-value, fully-deterministic hook and it works. The
+  "compress observations with an LLM" half of auto-capture is **deferred to v1**: it needs a
+  model, which conflicts with v0's zero-config-local promise. v0's capture path is explicit
+  (the agent calls `memory_save`/`memory_save_rejection`); automatic transcript compression
+  arrives with the Ollama/sidecar work.
+
+**Next**
+- **Phase v0 §7 — local web viewer:** HTTP JSON API (list/delete) + embedded SPA.
+
+---
+
 ## 2026-06-23 (cont.) — Phase v0 §4 + §5: tools wired to storage
 
 **Done**

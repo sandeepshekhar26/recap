@@ -11,10 +11,10 @@ for the working loop.
 
 ## ▶ Current focus
 
-**Phase v0 §1–§5 done** — the MCP server is functional end-to-end (verified live over stdio:
-save/recall/rejections persist to a real per-client SQLite DB). Next:
-**Phase v0 §6 — hooks** (SessionStart injection, SessionEnd capture, UserPromptSubmit),
-then §7 web viewer and §8 packaging.
+**Phase v0 §1–§6 done** — server + hooks functional (verified live: session-start injects
+project memory as additionalContext). Next: **Phase v0 §7 — local web viewer**
+(HTTP API + embedded SPA to browse/delete), then §8 packaging (plugin manifest, MCP
+registry, GoReleaser).
 
 ---
 
@@ -67,11 +67,15 @@ memory locally. Ship to the Claude Code marketplace + official MCP Registry at t
 - [x] Implement `memory_save` / `memory_recall` / `memory_search` against the repository
       (`serve` resolves client/project from cwd, opens the per-client DB; verified live over stdio)
 
-### 6. Hooks (auto-capture & inject)
-- [ ] `recap hook session-start` → emits `hookSpecificOutput.additionalContext` under token budget
-- [ ] `recap hook session-end` / `stop` → enqueue observation fast (<10ms), compress async
-- [ ] Background worker: compress queued observations → store (the claude-mem pattern)
-- [ ] `recap hook user-prompt-submit` → lightweight relevance injection
+### 6. Hooks (auto-capture & inject) ✅ (compression deferred — see note)
+- [x] `recap hook session-start` → emits `hookSpecificOutput.additionalContext` (rejections +
+      relevant memories), token-budgeted; emits nothing when empty
+- [x] `recap hook session-end` → session bookkeeping (`UpsertSession`); `stop` → no-op
+- [x] `recap hook user-prompt-submit` → lightweight, prompt-relevant injection (small budget,
+      memories only, to avoid context poisoning)
+- [ ] **(deferred to v1)** async worker + LLM observation compression — inherently needs a
+      model, which conflicts with zero-config-local; lands with the Ollama/sidecar embedder.
+      Hooks are best-effort (errors → stderr, exit 0) so a misconfig never breaks a session.
 
 ### 7. Local web viewer
 - [ ] HTTP server + JSON API (list/edit/delete) embedded via `embed.FS`

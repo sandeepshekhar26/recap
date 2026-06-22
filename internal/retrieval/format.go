@@ -1,17 +1,16 @@
-package mcp
+package retrieval
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/sandeepshekhar26/recap/internal/retrieval"
 	"github.com/sandeepshekhar26/recap/internal/store"
 )
 
-// formatRecall renders a recall Result as human/agent-readable text: active
-// rejections first (highest signal), then relevant memories. This is reused for
-// the SessionStart hook injection (§6).
-func formatRecall(res retrieval.Result) string {
+// FormatRecall renders a Result as human/agent-readable text: active rejections
+// first (highest signal), then relevant memories. Reused by memory_recall and
+// the SessionStart hook injection.
+func FormatRecall(res Result) string {
 	if len(res.Rejections) == 0 && len(res.Memories) == 0 {
 		return "No memories yet for this project."
 	}
@@ -34,8 +33,8 @@ func formatRecall(res retrieval.Result) string {
 	return strings.TrimRight(b.String(), "\n")
 }
 
-// formatMemories renders just a list of memories (used by memory_search).
-func formatMemories(ms []retrieval.ScoredMemory) string {
+// FormatMemories renders just a list of memories (used by memory_search).
+func FormatMemories(ms []ScoredMemory) string {
 	if len(ms) == 0 {
 		return "No matching memories."
 	}
@@ -46,8 +45,8 @@ func formatMemories(ms []retrieval.ScoredMemory) string {
 	return strings.TrimRight(b.String(), "\n")
 }
 
-// formatRejections renders a list of rejected approaches (memory_list_rejections).
-func formatRejections(rs []store.Rejection) string {
+// FormatRejections renders a list of rejected approaches (memory_list_rejections).
+func FormatRejections(rs []store.Rejection) string {
 	if len(rs) == 0 {
 		return "No rejected approaches recorded for this project."
 	}
@@ -56,6 +55,11 @@ func formatRejections(rs []store.Rejection) string {
 		fmt.Fprintf(&b, "- %s — because %s\n", r.Approach, r.ReasonRejected)
 	}
 	return strings.TrimRight(b.String(), "\n")
+}
+
+// HasContent reports whether a recall Result has anything worth injecting.
+func (res Result) HasContent() bool {
+	return len(res.Rejections) > 0 || len(res.Memories) > 0
 }
 
 func formatMemoryLine(m store.Memory) string {

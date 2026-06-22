@@ -98,6 +98,25 @@ func (db *DB) ListRejections(ctx context.Context, clientID, projectID string) ([
 	return out, rows.Err()
 }
 
+// UpsertSession inserts a session row or updates its summary/ended_at if the id
+// already exists. Used by the session-end hook for lightweight bookkeeping.
+func (db *DB) UpsertSession(ctx context.Context, s Session) error {
+	if s.ID == "" {
+		return fmt.Errorf("upsert session: id is required")
+	}
+	_, err := db.sql.ExecContext(ctx,
+		`INSERT INTO sessions (id, client_id, project_id, summary, started_at, ended_at)
+		 VALUES (?, ?, ?, ?, ?, ?)
+		 ON CONFLICT(id) DO UPDATE SET
+		   summary    = excluded.summary,
+		   ended_at   = excluded.ended_at`,
+		s.ID, s.ClientID, s.ProjectID, s.Summary, s.StartedAt, s.EndedAt)
+	if err != nil {
+		return fmt.Errorf("upsert session: %w", err)
+	}
+	return nil
+}
+
 // ListMemories returns a project's memories, newest first, up to limit. The
 // retrieval layer uses this to gather candidates for vector scoring.
 func (db *DB) ListMemories(ctx context.Context, clientID, projectID string, limit int) ([]Memory, error) {

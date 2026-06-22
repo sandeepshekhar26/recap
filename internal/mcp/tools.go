@@ -87,7 +87,7 @@ func (d Deps) recall(ctx context.Context, _ *sdk.CallToolRequest, in RecallInput
 	if err != nil {
 		return nil, nil, err
 	}
-	return text(formatRecall(res)), nil, nil
+	return text(retrieval.FormatRecall(res)), nil, nil
 }
 
 func (d Deps) search(ctx context.Context, _ *sdk.CallToolRequest, in SearchInput) (*sdk.CallToolResult, any, error) {
@@ -97,7 +97,7 @@ func (d Deps) search(ctx context.Context, _ *sdk.CallToolRequest, in SearchInput
 	if err != nil {
 		return nil, nil, err
 	}
-	return text(formatMemories(res.Memories)), nil, nil
+	return text(retrieval.FormatMemories(res.Memories)), nil, nil
 }
 
 func (d Deps) save(ctx context.Context, _ *sdk.CallToolRequest, in SaveInput) (*sdk.CallToolResult, any, error) {
@@ -137,7 +137,7 @@ func (d Deps) listRejections(ctx context.Context, _ *sdk.CallToolRequest, _ List
 	if err != nil {
 		return nil, nil, err
 	}
-	return text(formatRejections(rs)), nil, nil
+	return text(retrieval.FormatRejections(rs)), nil, nil
 }
 
 // --- result helpers ---
