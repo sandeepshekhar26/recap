@@ -157,6 +157,12 @@ See [`STUDY.md`](STUDY.md) for verified hook field names and the `<1s` constrain
 
 Record every non-obvious technical decision here (newest first).
 
+- **2026-06-23 — SQLite driver: `modernc.org/sqlite` (pure Go).** No CGo → trivial
+  cross-compile for the GoReleaser matrix and a true single binary. **FTS5 verified working**
+  under modernc (TestFTS5Search). Vectors stored as little-endian `float32` BLOBs with
+  in-process cosine (§3); `sqlite-vec` deferred — unnecessary at v0 scale and it would
+  reintroduce CGo. One DB connection (`SetMaxOpenConns(1)`) + WAL + busy_timeout for safe
+  low-concurrency local writes.
 - **2026-06-23 — Stack:** Go core + pluggable `Embedder` (Rust `fastembed-rs` sidecar
   default / Ollama / FTS5-only). Rationale in `decision.md` §11.
 - **2026-06-23 — Continuity model:** repo is self-sustaining; `CLAUDE.md` working loop +
@@ -165,8 +171,8 @@ Record every non-obvious technical decision here (newest first).
 
 ## 9. Open technical questions (VERIFY before the dependent task)
 
-- **SQLite driver:** `mattn/go-sqlite3` (CGo; full FTS5 + loadable `sqlite-vec`) vs
-  `modernc.org/sqlite` (pure-Go; CGo-free but weaker extension story → in-process cosine).
-  Decide at Phase v0 §2.
-- **Go MCP SDK** version/API — young, pin and re-check (`STUDY.md`).
-- **`sqlite-vec` compatibility** with the chosen driver, or commit to in-process cosine.
+- ~~**SQLite driver**~~ — RESOLVED 2026-06-23: `modernc.org/sqlite` (pure Go), in-process
+  cosine. See decision log.
+- ~~**Go MCP SDK** version~~ — RESOLVED: pinned at v1.6.1 (past 1.0, stable).
+- **Embedding default for v0:** Ollama-or-FTS5-fallback now, Rust sidecar in v1 — confirm
+  before §3 vector work and §6 injection.

@@ -5,6 +5,37 @@ A fresh session should read the top entry first to orient. Keep entries short an
 
 ---
 
+## 2026-06-23 (cont.) — Phase v0 §2: storage layer
+
+**Done**
+- **Driver decision: `modernc.org/sqlite` (pure Go).** Resolves the gating open question —
+  CGo-free, cross-compiles trivially, **FTS5 verified working** (TestFTS5Search). Recorded
+  in TECH.md §8; §9 open-questions trimmed. `sqlite-vec` deferred (would reintroduce CGo).
+- `internal/store`: `Open()` with WAL + busy_timeout + `MaxOpenConns(1)` and idempotent
+  v1 migrations (memories / rejected_approaches / sessions + `memories_fts` FTS5 external-
+  content table kept in sync by insert/update/delete triggers).
+- Models (`Memory`, `Rejection`, `Session`, `MemoryType`) + little-endian `float32` BLOB
+  embedding encode/decode (ready for §3 vectors; nil today).
+- Repository CRUD: `SaveMemory`/`GetMemory`, `SaveRejection`/`ListRejections` (newest-first,
+  project-scoped), `SearchMemories` (FTS5 BM25, project-scoped).
+- Per-client resolution (`clients.go`): `Config` with longest-prefix `ClientRule`s →
+  `client_id`; `DBPath` = one `<client_id>.db` per client under `$RECAP_HOME`/`~/.recap`;
+  `ResolveProjectID` walks up to the nearest `.git`.
+- Tests: CRUD, validation, FTS5 search, client-id resolution incl. path-segment edge cases,
+  project-id git-walk, embedding roundtrip, and the **isolation guarantee** (client B's DB
+  can't see client A's rows).
+
+**Why**
+- Storage is the contract retrieval (§3) and the tool handlers (§4–§5) build on; the
+  per-client *file* boundary is what makes the privacy story (decision.md §4 Axis 2) real
+  rather than a soft filter.
+
+**Next**
+- **Phase v0 §3 (Retrieval):** `Embedder` interface + FTS5-only no-op embedder; vector
+  cosine; reciprocal-rank fusion; token-budget selection.
+
+---
+
 ## 2026-06-23 (cont.) — Phase v0 §1: MCP server skeleton
 
 **Done**
