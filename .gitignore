@@ -1,0 +1,20 @@
+# Build output
+/recap
+/dist/
+*.exe
+
+# Local data / databases
+*.db
+*.db-shm
+*.db-wal
+.recap/
+
+# Go
+*.test
+*.out
+/vendor/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
