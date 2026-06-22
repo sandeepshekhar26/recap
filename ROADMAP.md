@@ -11,10 +11,10 @@ for the working loop.
 
 ## ▶ Current focus
 
-**Phase v0 §1–§3 done** (MCP skeleton + storage + retrieval engine, all tested). Next:
-**Phase v0 §5 + §4 — wire the `memory_*` tools to storage/retrieval** so the server is
-functional end-to-end: `memory_save`/`memory_recall`/`memory_search` and the differentiator
-`memory_save_rejection`/`memory_list_rejections`. Then §6 hooks for auto-capture/injection.
+**Phase v0 §1–§5 done** — the MCP server is functional end-to-end (verified live over stdio:
+save/recall/rejections persist to a real per-client SQLite DB). Next:
+**Phase v0 §6 — hooks** (SessionStart injection, SessionEnd capture, UserPromptSubmit),
+then §7 web viewer and §8 packaging.
 
 ---
 
@@ -58,13 +58,14 @@ memory locally. Ship to the Claude Code marketplace + official MCP Registry at t
 - [x] Token-budget-aware selection (hard cap; rejections charged first)
       — note: SessionStart *formatting* of the index/small-files output lands in §6
 
-### 4. The differentiator: rejected-approach capture
-- [ ] `memory_save_rejection` writes `{approach, reason_rejected, scope, date}`
-- [ ] `memory_list_rejections` for the active project
-- [ ] SessionStart injection always prepends active rejections ("Already ruled out: X because Y")
+### 4. The differentiator: rejected-approach capture ✅
+- [x] `memory_save_rejection` writes `{approach, reason_rejected, scope, date}`
+- [x] `memory_list_rejections` for the active project
+- [ ] SessionStart injection always prepends active rejections ("Already ruled out: X because Y") — in §6
 
-### 5. Tools wired to storage
-- [ ] Implement `memory_save` / `memory_recall` / `memory_search` against the repository
+### 5. Tools wired to storage ✅
+- [x] Implement `memory_save` / `memory_recall` / `memory_search` against the repository
+      (`serve` resolves client/project from cwd, opens the per-client DB; verified live over stdio)
 
 ### 6. Hooks (auto-capture & inject)
 - [ ] `recap hook session-start` → emits `hookSpecificOutput.additionalContext` under token budget

@@ -16,7 +16,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/sandeepshekhar26/recap/internal/config"
+	"github.com/sandeepshekhar26/recap/internal/embed"
 	"github.com/sandeepshekhar26/recap/internal/mcp"
+	"github.com/sandeepshekhar26/recap/internal/retrieval"
+	"github.com/sandeepshekhar26/recap/internal/store"
 )
 
 // version is overridden at build time via -ldflags "-X main.version=...".
@@ -56,7 +60,49 @@ func run(args []string) error {
 func cmdServe(_ []string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	return mcp.Serve(ctx, version)
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	sc, err := openScope(ctx, cwd)
+	if err != nil {
+		return err
+	}
+	defer sc.store.Close()
+
+	return mcp.Serve(ctx, version, mcp.Deps{
+		Store:     sc.store,
+		Retriever: retrieval.New(sc.store, embed.Nop{}),
+		ClientID:  sc.clientID,
+		ProjectID: sc.projectID,
+	})
+}
+
+// scope is a resolved client/project plus its open per-client database.
+type scope struct {
+	store     *store.DB
+	clientID  string
+	projectID string
+}
+
+// openScope resolves the client_id (directory rules) and project_id (nearest
+// .git) for cwd and opens that client's database. The caller must Close it.
+func openScope(ctx context.Context, cwd string) (scope, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return scope{}, err
+	}
+	clientID := cfg.ResolveClientID(cwd)
+	dbPath, err := cfg.DBPath(clientID)
+	if err != nil {
+		return scope{}, err
+	}
+	db, err := store.Open(ctx, dbPath)
+	if err != nil {
+		return scope{}, err
+	}
+	return scope{store: db, clientID: clientID, projectID: store.ResolveProjectID(cwd)}, nil
 }
 
 // cmdHook handles a Claude Code lifecycle hook event. See ROADMAP Phase v0 §6.

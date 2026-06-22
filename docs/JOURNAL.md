@@ -5,6 +5,40 @@ A fresh session should read the top entry first to orient. Keep entries short an
 
 ---
 
+## 2026-06-23 (cont.) — Phase v0 §4 + §5: tools wired to storage
+
+**Done**
+- `internal/config`: loads optional `$RECAP_HOME/config.json` (directory→client_id rules,
+  base dir) into a `store.Config`; missing file = defaults, not an error.
+- `internal/mcp` refactored to carry `Deps{Store, Retriever, ClientID, ProjectID}`; the five
+  tools are now **real**:
+  - `memory_save` (validates type), `memory_recall` (rejections + fused memories),
+    `memory_search` (memories only), `memory_save_rejection`, `memory_list_rejections`.
+  - Bad input returns `IsError` results, not protocol errors.
+  - `format.go` renders recall as "Already ruled out … / Relevant memories …" (reused by §6).
+- `recap serve` resolves client_id (config rules) + project_id (nearest `.git`) from cwd,
+  opens that client's DB, builds the retriever (Nop embedder for now), and serves.
+- Tests: end-to-end tool calls over the in-memory transport (save → recall surfaces the
+  rejection first + keyword-matched memory), invalid-input → IsError, plus a **live stdio
+  smoke test** of the built binary with an isolated `RECAP_HOME` (persisted to `default.db`,
+  exit 0).
+
+**Why**
+- The server is now genuinely usable by any MCP client; the differentiator
+  (`memory_save_rejection` → always surfaced on recall) works end-to-end.
+
+**Note (honest scope):** recall is keyword-only until an embedder is wired (v1) — a query
+with no keyword overlap returns only the always-on rejections. Semantic recall comes free by
+swapping `embed.Nop` for Ollama/sidecar.
+
+**Next**
+- **Phase v0 §6 — hooks:** `recap hook session-start` (inject recall as
+  `additionalContext`), `session-end` (session bookkeeping), `user-prompt-submit` (light
+  injection). LLM-based observation compression is deferred to v1 (needs a model; conflicts
+  with zero-config-local — lands with Ollama/sidecar).
+
+---
+
 ## 2026-06-23 (cont.) — Phase v0 §3: retrieval engine
 
 **Done**
