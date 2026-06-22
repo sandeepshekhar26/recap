@@ -98,6 +98,38 @@ func (db *DB) ListRejections(ctx context.Context, clientID, projectID string) ([
 	return out, rows.Err()
 }
 
+// ListMemories returns a project's memories, newest first, up to limit. The
+// retrieval layer uses this to gather candidates for vector scoring.
+func (db *DB) ListMemories(ctx context.Context, clientID, projectID string, limit int) ([]Memory, error) {
+	if limit <= 0 {
+		limit = 500
+	}
+	rows, err := db.sql.QueryContext(ctx,
+		`SELECT id, client_id, project_id, type, content, rationale, created_at, embedding
+		 FROM memories
+		 WHERE client_id = ? AND project_id = ?
+		 ORDER BY created_at DESC, id DESC
+		 LIMIT ?`, clientID, projectID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list memories: %w", err)
+	}
+	defer rows.Close()
+
+	var out []Memory
+	for rows.Next() {
+		var (
+			m   Memory
+			emb []byte
+		)
+		if err := rows.Scan(&m.ID, &m.ClientID, &m.ProjectID, &m.Type, &m.Content, &m.Rationale, &m.CreatedAt, &emb); err != nil {
+			return nil, fmt.Errorf("list memories: scan: %w", err)
+		}
+		m.Embedding = decodeEmbedding(emb)
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
 // SearchMemories runs an FTS5 keyword query within one project, best match
 // first (BM25). This is the keyword half of the hybrid retrieval built in §3;
 // query is raw FTS5 match syntax.

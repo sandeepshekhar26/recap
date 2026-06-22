@@ -5,6 +5,35 @@ A fresh session should read the top entry first to orient. Keep entries short an
 
 ---
 
+## 2026-06-23 (cont.) — Phase v0 §3: retrieval engine
+
+**Done**
+- `internal/embed`: `Embedder` interface (`Embed`/`Dims`/`Name`) + `Nop` backend so
+  retrieval degrades to keyword-only until a real model is wired (Ollama/sidecar in v1).
+- `internal/retrieval`: hybrid `Retriever.Recall`:
+  - keyword via FTS5 (with `sanitizeFTS` → quoted-OR MATCH expr; empty-text falls back to
+    recent memories);
+  - vector via cosine over candidate embeddings (skipped when embedder Dims()==0);
+  - `fuseRRF` (k=60) dedupes + fuses both rankings;
+  - `trimToBudget` enforces a hard token cap, charging always-injected rejections first and
+    keeping ≥1 memory.
+  - Active rejections are returned separately and always (decision.md §10 "prioritize rejections").
+- Added `store.ListMemories` (candidate pool for vector scan / empty-query fallback).
+- Tests: RRF ordering+dedupe, cosine (identical/orthogonal/mismatched), FTS sanitization,
+  and end-to-end Recall over a real DB — keyword path, vector-fusion path (fake embedder),
+  and budget trimming.
+
+**Why**
+- This is the accuracy core (decision.md §6). Building it behind the `Embedder` interface
+  means v0 ships useful keyword recall now and gains semantic recall by swapping the backend
+  later — no call-site changes.
+
+**Next**
+- **Phase v0 §5 + §4:** wire the five `memory_*` MCP tools to the store + retriever so the
+  server actually persists and recalls (currently they are no-op stubs).
+
+---
+
 ## 2026-06-23 (cont.) — Phase v0 §2: storage layer
 
 **Done**

@@ -11,10 +11,10 @@ for the working loop.
 
 ## ▶ Current focus
 
-**Phase v0 §1–§2 done** (MCP skeleton + storage layer, all tested). Next:
-**Phase v0 §3 — Retrieval.** Build FTS5 + vector cosine fused by reciprocal-rank fusion,
-behind the `Retriever` interface, with token-budget-aware selection. Start with the
-`Embedder` interface + a no-op (FTS5-only) embedder so retrieval works before any model.
+**Phase v0 §1–§3 done** (MCP skeleton + storage + retrieval engine, all tested). Next:
+**Phase v0 §5 + §4 — wire the `memory_*` tools to storage/retrieval** so the server is
+functional end-to-end: `memory_save`/`memory_recall`/`memory_search` and the differentiator
+`memory_save_rejection`/`memory_list_rejections`. Then §6 hooks for auto-capture/injection.
 
 ---
 
@@ -50,12 +50,13 @@ memory locally. Ship to the Claude Code marketplace + official MCP Registry at t
 - [x] Per-client DB resolution: directory → `client_id` (longest-prefix rules) → DB file path
 - [x] CRUD repository functions with tests (save/get memory, rejections, FTS5 search, isolation, embedding roundtrip)
 
-### 3. Retrieval
-- [ ] FTS5 keyword query
-- [ ] `Embedder` interface + FTS5-only no-op embedder (vectors stubbed)
-- [ ] Vector cosine over stored embeddings
-- [ ] Reciprocal-rank fusion of keyword + vector results
-- [ ] Token-budget-aware selection (index + small-files pattern, hard cap)
+### 3. Retrieval ✅
+- [x] FTS5 keyword query (with query sanitization → safe MATCH expression)
+- [x] `Embedder` interface + FTS5-only no-op embedder (`internal/embed`)
+- [x] Vector cosine over stored embeddings
+- [x] Reciprocal-rank fusion of keyword + vector results
+- [x] Token-budget-aware selection (hard cap; rejections charged first)
+      — note: SessionStart *formatting* of the index/small-files output lands in §6
 
 ### 4. The differentiator: rejected-approach capture
 - [ ] `memory_save_rejection` writes `{approach, reason_rejected, scope, date}`
